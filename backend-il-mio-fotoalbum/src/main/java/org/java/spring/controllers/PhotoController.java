@@ -59,6 +59,7 @@ public class PhotoController {
 	 */
 	private String modifyOrCreatePhoto(Photo photo , String title , String btnText , String template , Model model) {
 		List<Category> categories = categoryServ.findAll();
+		photo.setVisible(false);
 		model.addAttribute("categories" , categories);
 		model.addAttribute("btnText" , btnText);
 		model.addAttribute("photo", photo);

@@ -20,7 +20,6 @@ public class Photo {
 	@ManyToMany()
 	private List<Category> categories;
 
-	
 	private String title;
 	
 	private String description;

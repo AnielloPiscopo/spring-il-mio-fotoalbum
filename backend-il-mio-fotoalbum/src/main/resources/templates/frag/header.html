@@ -6,26 +6,19 @@
     </div>
 
     <ul>
-      <li>
-        <a th:href="@{/login}" sec:authorize="!isAuthenticated()">Login</a>
-        <a
-          th:href="@{/logout}"
-          sec:authorize="hasAnyAuthority('USER' , 'ADMIN')"
-          >Logout</a
-        >
-        <a
-          th:href="@{/photos}"
-          sec:authorize="hasAnyAuthority('USER' , 'ADMIN')"
+      <li sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">Login</a>
+      </li>
+      <li sec:authorize="isAuthenticated()">
+        <a th:href="@{/logout}">Logout</a>
+      </li>
+      <li sec:authorize="hasAnyAuthority('ADMIN')">
+        <a th:href="@{/photos}"
           >Lista Foto</a
         >
-        <a
-          th:href="@{/comments}"
-          sec:authorize="hasAnyAuthority('USER' , 'ADMIN')"
-          >Lista commenti</a
-        >
-        <a
-          th:href="@{/categories}"
-          sec:authorize="hasAnyAuthority('USER' , 'ADMIN')"
+      </li>
+      <li sec:authorize="hasAnyAuthority('ADMIN')">
+        <a th:href="@{/categories}"
           >Lista categorie</a
         >
       </li>

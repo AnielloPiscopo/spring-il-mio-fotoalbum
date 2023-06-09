@@ -24,38 +24,47 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return all Photo elements in the database with the boolean "deleted" set to false
+	 * Return all the Photo elements visible for all the users in the database
+	 * @return photos
+	 */
+	public List<Photo> findAllVisiblePhotos() {
+		return repo.findByVisibleTrue();
+	}
+	
+	/**
+	 * 
+	 * Return all private Photo elements in the database with the boolean "deleted" set to false
 	 * @return photos
 	 */
 	public List<Photo> findAllAvailablePhotos() {
-		return repo.findByTrashedFalse();
+		return repo.findByVisibleFalseAndTrashedFalse();
 	}
 	
 	/**
 	 * 
-	 * Return all Photo elements in the database with the boolean "deleted" set to true
+	 * Return all private Photo elements in the database with the boolean "deleted" set to true
 	 * @return photos
 	 */
 	public List<Photo> findAllTrashedPhotos() {
-		return repo.findByTrashedTrue();
+		return repo.findByVisibleFalseAndTrashedTrue();
 	}
 	
 	/**
 	 * 
-	 * Return a list of Photo elements with the boolean "deleted" set to false by filtering according to the string given in input
+	 * Return a list of private Photo elements with the boolean "deleted" set to false by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForAvailablePhotos(String title) {
-		return repo.findByTitleContainingAndTrashedFalse(title);
+		return repo.findByTitleContainingAndVisibleFalseAndTrashedFalse(title);
 	}
 	
 	/**
 	 * 
-	 * Return a list of Photo elements with the boolean "deleted" set to true by filtering according to the string given in input
+	 * Return a list of private Photo elements with the boolean "deleted" set to true by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForTrashedPhotos(String title) {
-		return repo.findByTitleContainingAndTrashedTrue(title);
+		return repo.findByTitleContainingAndVisibleFalseAndTrashedTrue(title);
 	}
 	
 	/**
