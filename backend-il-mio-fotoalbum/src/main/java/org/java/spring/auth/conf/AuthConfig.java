@@ -26,11 +26,11 @@ public class AuthConfig {
 		return http
 				.csrf(c->c.disable())
 				.authorizeRequests(a->a
-				.requestMatchers("/api/**").permitAll()
-				.requestMatchers("/**").hasAuthority("ADMIN")
+						.requestMatchers("/api/**").permitAll()
+						.requestMatchers("/**").hasAuthority("ADMIN")
 				)
 				.formLogin(f->f.permitAll())
-				.logout(l->l.logoutSuccessUrl("/"))
+				.logout(l->l.logoutSuccessUrl("/photos"))
 				.build();
 	}
 	
