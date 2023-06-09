@@ -1,0 +1,123 @@
+<div class="my_table-container" th:fragment="table(index,photos)">
+  <div class="my_container">
+    <h1>[[${title}]]</h1>
+
+    <form method="POST" th:action="@{/photos}">
+      <input type="text" name="name" />
+      <button type="submit">Filtra</button>
+    </form>
+
+    <div class="my_btn-container">
+      <a
+        th:if="${index}"
+        th:href="@{/photos/create}"
+        sec:authorize="hasAuthority('ADMIN')"
+        >Create new photo</a
+      >
+      <a
+        th:if="${index}"
+        th:href="@{/photos/trash}"
+        sec:authorize="hasAuthority('ADMIN')"
+        >Go to the recycle bean</a
+      >
+      <a th:unless="${index}" th:href="@{/photos}">Return back</a>
+
+      <form
+        th:if="${index}"
+        th:action="@{/photos/soft-delete-all}"
+        method="POST"
+        sec:authorize="hasAuthority('ADMIN')"
+      >
+        <button type="submit">Trash all</button>
+      </form>
+
+      <form
+        th:unless="${index}"
+        th:action="@{/photos/refresh-all}"
+        method="POST"
+      >
+        <button type="submit">Refresh all</button>
+      </form>
+
+      <form
+        th:unless="${index}"
+        th:action="@{/photos/delete-all}"
+        method="POST"
+      >
+        <button type="submit">Delete all</button>
+      </form>
+    </div>
+  </div>
+
+  <table th:unless="${photos.isEmpty()}">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Title</th>
+        <th>Descrizione</th>
+        <th>Img_Url</th>
+        <th>Visible</th>
+        <th>Categories</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr th:each="photo : ${photos}" th:object="${photo}">
+        <td scope="row">
+          <span>[[*{id}]]</span>
+        </td>
+        <td>
+          <span>[[*{title}]]</span>
+        </td>
+        <td>
+          <span>[[*{description}]]</span>
+        </td>
+        <td>
+          <span>[[*{imgUrl}]]</span>
+        </td>
+        <td>
+          <span th:each="category : *{categories}" th:object="${category}"
+            >[[*{name}]]</span
+          >
+        </td>
+        <td>
+          <a th:href="@{/photos/{id} (id=*{id})}">Show</a>
+          <a
+            th:if="${index}"
+            th:href="@{/photos/edit/{id} (id=*{id})}"
+            sec:authorize="hasAuthority('ADMIN')"
+            >Edit</a
+          >
+
+          <form
+            th:if="${index}"
+            th:action="@{/photos/soft-delete/{id} (id=*{id})}"
+            sec:authorize="hasAuthority('ADMIN')"
+            method="POST"
+          >
+            <button type="submit">Send to the recycle bean</button>
+          </form>
+
+          <form
+            th:unless="${index}"
+            th:action="@{/photos/refresh/{id} (id=*{id})}"
+            method="POST"
+          >
+            <button type="submit">Refresh</button>
+          </form>
+
+          <form
+            th:unless="${index}"
+            th:action="@{/photos/delete/{id} (id=*{id})}"
+            method="POST"
+          >
+            <button type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div th:if="${photos.isEmpty()}">Non ci sono elementi nella tabella</div>
+</div>

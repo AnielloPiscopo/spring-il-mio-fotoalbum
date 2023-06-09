@@ -1,0 +1,58 @@
+<form
+  method="POST"
+  th:fragment="form(create , btnText , photo)"
+  th:object="${photo}"
+  th:action="${create} ? @{/photos/create} : @{/photos/edit/{id} (id=*{id})}"
+>
+  <div class="my_form-el">
+    <input
+      type="text"
+      name="title"
+      th:value="*{title}"
+      placeholder="Inserisci titolo"
+    />
+    <span th:if="${errors != null && errors.hasFieldErrors('title')}"
+      >[[${errors.getFieldError('title').defaultMessage}]]</span
+    >
+  </div>
+  <div class="my_form-el">
+    <textarea
+      name="description"
+      id=""
+      cols="30"
+      rows="10"
+      placeholder="Inserisci descrizione"
+    >
+[[*{description}]]</textarea
+    >
+    <span th:if="${errors != null && errors.hasFieldErrors('description')}"
+      >[[${errors.getFieldError('description').defaultMessage}]]</span
+    >
+  </div>
+  <div class="my_form-el">
+    <input
+      type="text"
+      name="imgUrl"
+      th:value="*{imgUrl}"
+      placeholder="Inserisci l'url dell'immagine"
+    />
+    <span th:if="${errors != null && errors.hasFieldErrors('imgUrl')}"
+      >[[${errors.getFieldError('imgUrl').defaultMessage}]]</span
+    >
+  </div>
+
+  <div class="my-form-el">
+    <div th:each="category : ${categories}" th:object="${category}">
+      <input
+        th:id="${'category-' + category.id}"
+        th:value="*{id}"
+        th:checked="${create} ? false : ${photo.categories.contains(category)}"
+        type="checkbox"
+        name="categories"
+      />
+      <label th:for="${'category-' + category.id}">[[ *{name} ]]</label>
+    </div>
+  </div>
+
+  <button type="submit">[[${btnText}]]</button>
+</form>

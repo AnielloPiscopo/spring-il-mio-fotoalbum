@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ita" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{frag/main-layout :: head(${title})}"> </head>
+
+  <body>
+    <header th:replace="~{frag/header :: header}"></header>
+    <main>
+      <th:block
+        th:replace="~{view/admin/photo/frag/table-layout :: table(false , ${photos})}"
+      ></th:block>
+    </main>
+  </body>
+</html>
