@@ -52,6 +52,24 @@
       />
       <label th:for="${'category-' + category.id}">[[ *{name} ]]</label>
     </div>
+    <span th:if="${errors != null && errors.hasFieldErrors('categories')}"
+      >[[${errors.getFieldError('categories').defaultMessage}]]</span
+    >
+  </div>
+
+  <div class="my-form-el" sec:authorize="hasAuthority('SUPERADMIN')">
+    <div>
+      <input
+        th:value="*{visible}"
+        type="checkbox"
+        name="visible"
+        th:checked="${create} ? false : ${photo.visible}"
+      />
+      <label>VISIBILE</label>
+    </div>
+    <span th:if="${errors != null && errors.hasFieldErrors('categories')}"
+      >[[${errors.getFieldError('categories').defaultMessage}]]</span
+    >
   </div>
 
   <button type="submit">[[${btnText}]]</button>

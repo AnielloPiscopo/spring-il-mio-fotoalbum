@@ -12,17 +12,21 @@ import org.springframework.stereotype.Service;
 public class RoleServ {
 
 	@Autowired
-	private RoleRepo roleRepo;
+	private RoleRepo repo;
 	
 	public List<Role> findAll() {
-		return roleRepo.findAll();
+		return repo.findAll();
 	}
 	
 	public Optional<Role> findById(int id) {
-		return roleRepo.findById(id);
+		return repo.findById(id);
+	}
+	
+	public Optional<Role> findByName(String name){
+		return repo.findByName(name);
 	}
 	
 	public Role save(Role role) {	
-		return roleRepo.save(role);
+		return repo.save(role);
 	}
 }

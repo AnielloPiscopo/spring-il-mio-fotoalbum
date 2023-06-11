@@ -1,13 +1,21 @@
 package org.java.spring.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.java.spring.auth.pojo.Role;
+import org.java.spring.auth.pojo.User;
+import org.java.spring.auth.services.RoleServ;
+import org.java.spring.auth.services.UserServ;
 import org.java.spring.pojo.Category;
 import org.java.spring.pojo.Photo;
 import org.java.spring.services.CategoryServ;
 import org.java.spring.services.PhotoServ;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,22 +25,113 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/photos")
 public class PhotoController {
+	private final static String SUPERADMIN="SUPERADMIN";
 	private static String pageTitle;
+	
+	private String getLoggedUserName() {
+		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+		return userName;
+	}
+	
+	private User getLoggedUser() {
+		Optional<User> userOpt = userServ.findByUsername(getLoggedUserName());
+		User user = userOpt.get();
+		return user;
+	}
+	
+	private String getLoggedUserRole() {
+		String userRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().findFirst().map(GrantedAuthority::getAuthority).orElse("");
+		return userRole;
+	}
+	
+	private Role getSpecialRole(){
+		Optional<Role> roleOpt = roleServ.findByName(SUPERADMIN);
+		Role role = roleOpt.get();
+		return role;
+	}
+	
+	private void photoAccessibilityCheck(Photo photo) throws Exception {
+		if(getLoggedUserRole().equals(SUPERADMIN)){
+			if((!photo.isVisible()) && (!photo.getUser().getRoles().contains(getSpecialRole()))) {
+				throw new IllegalAccessException();
+			}
+		}else if(!getLoggedUserRole().equals(SUPERADMIN)) {
+			if(photo.getUser().getId()!=getLoggedUser().getId() || photo.isVisible()) {
+				throw new IllegalAccessException();
+			}
+		}
+	}
+	
+	private List<Photo> getAvailablePhotos(){
+		List<Photo> photos = new ArrayList<>();
+		
+		if(getLoggedUserRole().equals(SUPERADMIN)) {
+			photos.addAll(serv.findAllVisiblePhotos());
+			photos.addAll(serv.findAllPhotosWithoutUsers());
+			photos.addAll(serv.findAllAvailablePhotos(getSpecialRole()));
+		}else {
+			photos.addAll(serv.findAllAvailablePhotos(getLoggedUser()));			
+		}
+		
+		return photos;
+	}
+	
+	private List<Photo> getAvailablePhotosFilteredByTitle(String title){
+		List<Photo> photos = new ArrayList<>();
+		
+		if(getLoggedUserRole().equals(SUPERADMIN)) {
+			photos.addAll(serv.filterByTitleForVisiblePhotos(title));
+			photos.addAll(serv.filterByTitleForPhotosWithoutUsers(title));
+			photos.addAll(serv.filterByTitleForAvailablePhotos(getSpecialRole(), title));
+		}else {
+			photos.addAll(serv.filterByTitleForAvailablePhotos(getLoggedUser(), title));
+		}
+		
+		return photos;
+	}
+	
+	private List<Photo> getTrashedPhotos(){
+		List<Photo> photos = new ArrayList<>();
+		
+		if(getLoggedUserRole() == SUPERADMIN) {
+			photos.addAll(serv.findAllTrashedPhotosWithoutUsers());
+			photos.addAll(serv.findAllTrashedPhotos(getSpecialRole()));
+		}else {
+			photos.addAll(serv.findAllTrashedPhotos(getLoggedUser()));
+		}
+		
+		return photos;
+	}
+	
+	private List<Photo> getTrashedPhotosFilteredByTitle(String title){
+		List<Photo> photos = new ArrayList<>();
+		
+		if(getLoggedUserRole() == SUPERADMIN) {
+			photos.addAll(serv.filterByTitleForTrashedPhotosWithoutUsers(title));
+			photos.addAll(serv.filterByTitleForTrashedPhotos(getSpecialRole(), title));
+		}else {
+			photos.addAll(serv.filterByTitleForTrashedPhotos(getLoggedUser(), title));
+		}
+		
+		return photos;
+	}
 	
 	/**
 	 * 
 	 * Return the HTML file to view in the Page(index/trash) and with the model add to this one a list of Photo elements and the title for the page
 	 * @return template
 	 */
-	private String getPhotos(List<Photo> photos , String title , String template , Model model) {
+	private String getPhotoTableTemplate(List<Photo> photos , String title , String template , Model model) {
 		model.addAttribute("photos" , photos);
 		model.addAttribute("title" , title);
+		model.addAttribute("user" , getLoggedUserName());
 		return template;
 	}
 	
@@ -44,9 +143,13 @@ public class PhotoController {
 	private String saveInDb(Photo photo , BindingResult br , String templateToEdit , String templateToRedirect , String title , String btnText , Model model) {
 		if(br.hasErrors()) {
 			model.addAttribute("errors" , br);
-			modifyOrCreatePhoto(photo, title, btnText, templateToRedirect, model);
+			getPhotoFormTemplate(photo, title, btnText, templateToRedirect, model);
 			return templateToEdit;
 		}
+		
+		if(getLoggedUserRole()!=SUPERADMIN) photo.setVisible(false);
+		
+		photo.setUser(getLoggedUser());
 		
 		serv.save(photo);
 		return templateToRedirect;
@@ -57,9 +160,8 @@ public class PhotoController {
 	 * Return the HTML file to view in the Page(create/edit) and with the model add to this one a Photo element, the title for the page , a text for the the button of the form
 	 * @return template
 	 */
-	private String modifyOrCreatePhoto(Photo photo , String title , String btnText , String template , Model model) {
+	private String getPhotoFormTemplate(Photo photo , String title , String btnText , String template , Model model) {
 		List<Category> categories = categoryServ.findAll();
-		photo.setVisible(false);
 		model.addAttribute("categories" , categories);
 		model.addAttribute("btnText" , btnText);
 		model.addAttribute("photo", photo);
@@ -72,8 +174,10 @@ public class PhotoController {
 	 * Change the boolean trashed value of a Photo element 
 	 */
 	private void changeTheTrashedValue(Photo photo , boolean trashed) {
-		photo.setTrashed(trashed);
-		serv.save(photo);
+		if(!photo.isVisible()) {
+			photo.setTrashed(trashed);
+			serv.save(photo);
+		}
 	}
 	
 	@Autowired
@@ -82,14 +186,19 @@ public class PhotoController {
 	@Autowired
 	private CategoryServ categoryServ;
 	
+	@Autowired
+	private UserServ userServ;
+	
+	@Autowired
+	private RoleServ roleServ;
+	
 	/*
 	 * 
 	 * A Method that manages the index page by showing all the available Photo elements in a table
 	 */
 	@GetMapping
 	public String index(Model model ) {
-		List<Photo> photos = serv.findAllAvailablePhotos();
-		return getPhotos(photos , "Lista foto" , "view/admin/photo/index" , model);
+		return getPhotoTableTemplate(getAvailablePhotos() , "Lista foto ", "view/admin/photo/index" , model);
 	}
 	
 	/*
@@ -98,8 +207,7 @@ public class PhotoController {
 	 */
 	@PostMapping
 	public String index(Model model , @RequestParam(name = "title") String title) {
-		List<Photo> photos = serv.filterByTitleForAvailablePhotos(title);
-		return getPhotos(photos , "Lista foto" , "view/admin/photo/index" , model);
+		return getPhotoTableTemplate(getAvailablePhotosFilteredByTitle(title) , "Lista foto" , "view/admin/photo/index" , model);
 	}
 	
 	/*
@@ -108,12 +216,21 @@ public class PhotoController {
 	 */
 	@GetMapping("/{id}")
 	public String show(Model model , @PathVariable("id") int id) {
-		Optional<Photo> optPhoto = serv.findById(id);
-		Photo photo = optPhoto.get();
-		pageTitle = "Photo " + photo.getTitle();
-		model.addAttribute("photo" , photo);
-		model.addAttribute("title" , pageTitle);
-		return "view/admin/photo/show";
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo);
+			
+			pageTitle = "Photo " + photo.getTitle();
+			model.addAttribute("photo" , photo);
+			model.addAttribute("title" , pageTitle);
+			return "view/admin/photo/show";
+		}catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
 	}
 	
 	/*
@@ -122,7 +239,7 @@ public class PhotoController {
 	 */
 	@GetMapping("/create")
 	public String create(Model model) {
-		return modifyOrCreatePhoto(new Photo() , "Creazione foto" , "Aggiungi alla lista la foto" , "view/admin/photo/create" , model);
+		return getPhotoFormTemplate(new Photo() , "Creazione foto" , "Aggiungi alla lista la foto" , "view/admin/photo/create" , model);
 	}
 	
 	/*
@@ -140,10 +257,21 @@ public class PhotoController {
 	 */
 	@GetMapping("/edit/{id}")
 	public String edit(Model model , @PathVariable("id") int id) {
-		Optional<Photo> optPhoto = serv.findById(id);
-		Photo photo = optPhoto.get();
-		pageTitle = "Modifica la photo: " + photo.getTitle();
-		return modifyOrCreatePhoto(photo , pageTitle , "Modifica elemento" , "view/admin/photo/edit" , model);
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo);
+			
+			
+			pageTitle = "Modifica la photo: " + photo.getTitle();
+			return getPhotoFormTemplate(photo , pageTitle , "Modifica elemento" , "view/admin/photo/edit" , model);
+		}catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
+		
 	}
 	
 	/*
@@ -153,7 +281,7 @@ public class PhotoController {
 	@PostMapping("/edit/{id}")
 	public String update(@Valid @ModelAttribute("photo") Photo photo , BindingResult br , Model model) {
 		pageTitle = "Modifica la photo: " + photo.getTitle();
-		return saveInDb(photo, br , "view/admin/photo/edit" , "redirect:/photos" + photo.getId() , pageTitle , "Modifica elemento" , model);
+		return saveInDb(photo, br , "view/admin/photo/edit" , "redirect:/photos/" + photo.getId() , pageTitle , "Modifica elemento" , model);
 	}
 	
 	/*
@@ -162,8 +290,7 @@ public class PhotoController {
 	 */
 	@GetMapping("/trash")
 	public String trash(Model model ) {
-		List<Photo> photos = serv.findAllTrashedPhotos();
-		return getPhotos(photos , "Lista foto cestinate" , "view/admin/photo/trash" , model);
+		return getPhotoTableTemplate(getTrashedPhotos() , "Lista foto cestinate" , "view/admin/photo/trash" , model);
 	}
 	
 	/*
@@ -172,8 +299,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/trash")
 	public String trash(Model model , @RequestParam(name = "title") String title) {
-		List<Photo> photos = serv.filterByTitleForTrashedPhotos(title);
-		return getPhotos(photos , "Lista foto cestinate" , "view/admin/photo/trash" , model);
+		return getPhotoTableTemplate(getTrashedPhotosFilteredByTitle(title) , "Lista foto cestinate" , "view/admin/photo/trash" , model);
 	}
 	
 	/*
@@ -182,10 +308,21 @@ public class PhotoController {
 	 */
 	@PostMapping("/soft-delete/{id}")
 	public String softDelete(@PathVariable("id") int id) {
-		Optional<Photo> optPhoto = serv.findById(id);
-		Photo photo = optPhoto.get();
-		changeTheTrashedValue(photo, true);
-		return "redirect:/photos";
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo);
+			
+			changeTheTrashedValue(photo, true);
+			
+			return "redirect:/photos";
+		}catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
+		
 	}
 	
 	/*
@@ -194,10 +331,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/soft-delete-all")
 	public String softDeleteAll() {
-		List<Photo> photos = serv.findAllAvailablePhotos();
-//		for(Photo photo : photos) {
-//			changeTheTrashedValue(photo, true);
-//		}
+		List<Photo> photos = getAvailablePhotos();
 		photos.stream().forEach(photo -> changeTheTrashedValue(photo, true));
 		return "redirect:/photos";
 	}
@@ -208,10 +342,21 @@ public class PhotoController {
 	 */
 	@PostMapping("/refresh/{id}")
 	public String refresh(@PathVariable("id") int id) {
-		Optional<Photo> optPhoto = serv.findById(id);
-		Photo photo = optPhoto.get();
-		changeTheTrashedValue(photo, false);
-		return "redirect:/photos/trash";
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo);
+			
+			changeTheTrashedValue(photo, false);
+			
+			return "redirect:/photos/trash";
+		} catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
+		
 	}
 	
 	/*
@@ -220,10 +365,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/refresh-all")
 	public String refreshAll() {
-		List<Photo> photos = serv.findAllTrashedPhotos();
-//		for(Photo photo : photos) {
-//			changeTheTrashedValue(photo, false);
-//		}
+		List<Photo> photos = getTrashedPhotos();
 		photos.stream().forEach(photo -> changeTheTrashedValue(photo, false));
 		return "redirect:/photos/trash";
 	}
@@ -234,10 +376,21 @@ public class PhotoController {
 	 */
 	@PostMapping("/delete/{id}")
 	public String delete(@PathVariable("id") int id) {
-		Optional<Photo> optPhoto = serv.findById(id);
-		Photo photo = optPhoto.get();
-		serv.delete(photo);
-		return "redirect:/photos/trash";
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo);
+			
+			serv.delete(photo);
+			
+			return "redirect:/photos/trash";
+		} catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
+		
 	}
 	
 	/*
@@ -246,7 +399,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/delete-all")
 	public String deleteAll() {
-		List<Photo> photos = serv.findAllTrashedPhotos();
+		List<Photo> photos = getTrashedPhotos();
 		serv.deleteAll(photos);
 		return "redirect:/photos/trash";
 	}

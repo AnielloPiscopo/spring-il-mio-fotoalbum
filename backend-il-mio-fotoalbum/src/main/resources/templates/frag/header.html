@@ -12,12 +12,12 @@
       <li sec:authorize="isAuthenticated()">
         <a th:href="@{/logout}">Logout</a>
       </li>
-      <li sec:authorize="hasAnyAuthority('ADMIN')">
+      <li sec:authorize="hasAnyAuthority('ADMIN' , 'SUPERADMIN')">
         <a th:href="@{/photos}"
           >Lista Foto</a
         >
       </li>
-      <li sec:authorize="hasAnyAuthority('ADMIN')">
+      <li sec:authorize="hasAnyAuthority('ADMIN' , 'SUPERADMIN')">
         <a th:href="@{/categories}"
           >Lista categorie</a
         >

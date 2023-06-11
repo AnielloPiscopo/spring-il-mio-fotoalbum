@@ -15,24 +15,28 @@ import org.springframework.stereotype.Service;
 public class UserServ implements UserDetailsService {
 
 	@Autowired
-	private UserRepo userRepo;
+	private UserRepo repo;
 	
 	public List<User> findAll() {
-		return userRepo.findAll();
+		return repo.findAll();
 	}
 	
 	public Optional<User> findById(int id) {	
-		return userRepo.findById(id);
+		return repo.findById(id);
+	}
+	
+	public Optional<User> findByUsername(String userName){
+		return repo.findByUsername(userName);
 	}
 	
 	public User save(User user) {	
-		return userRepo.save(user);
+		return repo.save(user);
 	}
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) 
 			throws UsernameNotFoundException {
-		Optional<User> userOpt = userRepo.findByUsername(username);
+		Optional<User> userOpt = repo.findByUsername(username);
 		
 		if (userOpt.isEmpty()) throw new UsernameNotFoundException("Username not found");
 		

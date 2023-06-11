@@ -3,18 +3,24 @@ package org.java.spring.auth.pojo;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.java.spring.pojo.Photo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -29,6 +35,10 @@ public class User implements UserDetails {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	
+	@JsonBackReference
+	@OneToMany(mappedBy = "user" , cascade = CascadeType.REMOVE)
+	private List<Photo> photos;
+	
 	@NotNull
 	@NotBlank
 	private String username;
@@ -42,7 +52,6 @@ public class User implements UserDetails {
 	
 	public User() { }
 	public User(String username, String password, Role... roles) {
-		
 		setUsername(username);
 		setPassword(password);
 		setRole(roles);
@@ -84,6 +93,14 @@ public class User implements UserDetails {
 	
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public List<Photo> getPhotos() {
+		return photos;
+	}
+	
+	public void setPhotos(List<Photo> photos) {
+		this.photos = photos;
 	}
 	
 	public String getUsername() {

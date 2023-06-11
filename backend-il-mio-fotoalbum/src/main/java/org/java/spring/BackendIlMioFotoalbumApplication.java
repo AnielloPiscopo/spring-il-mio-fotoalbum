@@ -47,14 +47,25 @@ public class BackendIlMioFotoalbumApplication implements CommandLineRunner {
 	
 	private void createUsersAndRoles(){
 		Role roleAdmin = new Role("ADMIN");
+		Role roleSuperadmin = new Role("SUPERADMIN");
 		
 		roleServ.save(roleAdmin);
+		roleServ.save(roleSuperadmin);
 		
-		final String pws = new BCryptPasswordEncoder().encode("pws");
+		final String pws = new BCryptPasswordEncoder().encode("p");
 		
-		User userAdmin = new User("admin", pws, roleAdmin);
-				
-		userServ.save(userAdmin);
+		User admin1 = new User("a", pws, roleAdmin);
+		User admin2 = new User("s", pws, roleAdmin);
+		User admin3 = new User("d", pws, roleAdmin);
+		
+		User superadmin1 = new User("ss" , pws , roleSuperadmin);
+		User superadmin2 = new User("asd" , pws , roleSuperadmin);
+		
+		userServ.save(admin1);
+		userServ.save(admin2);
+		userServ.save(admin3);
+		userServ.save(superadmin1);
+		userServ.save(superadmin2);
 	}
 	
 	private void addToDb() {

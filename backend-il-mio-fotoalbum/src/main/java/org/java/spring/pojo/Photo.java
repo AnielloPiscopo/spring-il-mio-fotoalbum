@@ -3,13 +3,17 @@ package org.java.spring.pojo;
 import java.util.Arrays;
 import java.util.List;
 
+import org.java.spring.auth.pojo.User;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Photo {
@@ -17,7 +21,11 @@ public class Photo {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 	
-	@ManyToMany()
+	@ManyToOne
+	@JoinColumn(nullable = true)
+	private User user;
+	
+	@ManyToMany
 	private List<Category> categories;
 
 	private String title;
@@ -46,6 +54,14 @@ public class Photo {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
 	}
 
 	public List<Category> getCategories() {
