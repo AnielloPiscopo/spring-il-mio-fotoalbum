@@ -3,12 +3,14 @@ import { store } from "../../store";
 import axios from "axios";
 
 import PhotosList from "./photos/PhotosList.vue";
+import PhotosBtnContainer from "./photos/BtnContainer.vue";
 
 export default {
   name: "PhotosSection",
 
   components: {
     PhotosList,
+    PhotosBtnContainer,
   },
 
   data() {
@@ -17,6 +19,9 @@ export default {
       photosList: [],
       apiUrlSpecificSection: "/photos",
       inputStr: "",
+      activePhotosIndex: 0,
+      autoPlay: null,
+      intervalPresence: true,
     };
   },
 
@@ -29,21 +34,106 @@ export default {
         .then((res) => {
           console.log(res);
           this.photosList = res.data;
+        })
+        .then((res) => {
+          this.manageInterval();
         });
+    },
+
+    resetIndex() {
+      this.activePhotosIndex = 0;
+    },
+
+    decreaseIndex(arrLength) {
+      this.activePhotosIndex =
+        this.activePhotosIndex <= 0
+          ? arrLength - 1
+          : this.activePhotosIndex - 1;
+    },
+
+    increaseIndex(arrLength) {
+      this.activePhotosIndex =
+        this.activePhotosIndex >= arrLength - 1
+          ? 0
+          : this.activePhotosIndex + 1;
+    },
+
+    changeSlide(currentIndex) {
+      this.activePhotosIndex = currentIndex;
+    },
+
+    manageInterval() {
+      console.log(this.intervalPresence);
+      if (this.intervalPresence) {
+        this.autoPlay = setInterval(
+          this.increaseIndex,
+          3000,
+          this.photosList.length
+        );
+      } else {
+        clearInterval(this.autoPlay);
+      }
+    },
+
+    showInitialAlertMessage() {
+      alert(
+        "Le immagini del carosello andranno avanti ogni 3s circa automaticamente a meno che tu non tenga il puntatore all'interno dello slyder"
+      );
     },
   },
 
   created() {
     this.getPhotosInfo();
   },
+
+  computed: {
+    filteredPhotosList() {
+      return this.photosList.filter((photo) => {
+        return photo.title.includes(this.inputStr.toLowerCase());
+      });
+    },
+
+    photosNum() {
+      return this.filteredPhotosList.length;
+    },
+  },
 };
 </script>
 
 <template>
   <section id="photos">
-    <h1>Lista foto</h1>
-    <input type="text" v-model="inputStr" />
-    <PhotosList :photos="photosList" :inputStr="inputStr" />
+    <div class="container-fluid">
+      <h1>Lista foto</h1>
+      <input
+        type="text"
+        v-model="inputStr"
+        placeholder="Cerca per titolo"
+        @change="getNumOfPhotos"
+      />
+      <span>{{ photosNum }}</span>
+
+      <PhotosList
+        :photos="filteredPhotosList"
+        :activeIndex="activePhotosIndex"
+        @go-forth="increaseIndex(photosList.length)"
+      />
+
+      <PhotosBtnContainer
+        @go-back="decreaseIndex(photosList.length)"
+        @go-forth="increaseIndex(photosList.length)"
+      />
+
+      <div class="container-fluid">
+        <input
+          type="checkbox"
+          id="interval-presence-checkbox"
+          v-model="intervalPresence"
+          checked
+          @change="manageInterval()"
+        />
+        <label for="interval-presence-checkbocx">Autoplay</label>
+      </div>
+    </div>
   </section>
 </template>
 

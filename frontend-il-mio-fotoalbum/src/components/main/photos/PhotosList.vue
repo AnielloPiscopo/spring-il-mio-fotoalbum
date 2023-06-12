@@ -13,21 +13,16 @@ export default {
       required: true,
     },
 
-    inputStr: {
-      required: false,
+    activeIndex: {
+      required: true,
     },
   },
 };
 </script>
 
 <template>
-  <div>
-    <SinglePhoto
-      v-for="(photo, index) in photos"
-      :key="index"
-      :photo="photo"
-      :inputStr="inputStr"
-    />
+  <div class="my_carousel-wrapper d-flex">
+    <SinglePhoto v-if="photos[activeIndex]" :photo="photos[activeIndex]" />
   </div>
 </template>
 

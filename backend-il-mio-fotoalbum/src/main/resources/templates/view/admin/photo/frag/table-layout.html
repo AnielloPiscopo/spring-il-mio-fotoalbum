@@ -46,6 +46,7 @@
         <th>Img_Url</th>
         <th>Categories</th>
         <th sec:authorize="hasAuthority('SUPERADMIN')">Visible</th>
+        <th sec:authorize="hasAuthority('SUPERADMIN')">Created by a</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -73,12 +74,25 @@
         <td sec:authorize="hasAuthority('SUPERADMIN')">
           <span>[[*{visible}]]</span>
         </td>
+        <td sec:authorize="hasAuthority('SUPERADMIN')">
+			<span>Metti ruolo</span>
+        </td>
         <td>
           <a th:href="@{/photos/{id} (id=*{id})}">Show</a>
-          <a th:if="${index}" th:href="@{/photos/edit/{id} (id=*{id})}">Edit</a>
+          <a sec:authorize="hasAuthority('ADMIN')" th:if="${index}" th:href="@{/photos/edit/{id} (id=*{id})}">Edit</a>
+          <a sec:authorize="hasAuthority('SUPERADMIN')" th:if="${index && role == 'SUPERADMIN'}" th:href="@{/photos/edit/{id} (id=*{id})}">Edit</a>
 
           <form
+          	sec:authorize="hasAuthority('ADMIN')"
             th:if="${index}"
+            th:action="@{/photos/soft-delete/{id} (id=*{id})}"
+            method="POST"
+          >
+            <button type="submit">Send to the recycle bean</button>
+          </form>
+          <form
+          	sec:authorize="hasAuthority('SUPERADMIN')"
+            th:if="${index && role == 'SUPERADMIN'}"
             th:action="@{/photos/soft-delete/{id} (id=*{id})}"
             method="POST"
           >
@@ -86,7 +100,16 @@
           </form>
 
           <form
+          	sec:authorize="hasAuthority('ADMIN')"
             th:unless="${index}"
+            th:action="@{/photos/refresh/{id} (id=*{id})}"
+            method="POST"
+          >
+            <button type="submit">Refresh</button>
+          </form>
+          <form
+          	sec:authorize="hasAuthority('SUPERADMIN')"
+            th:unless="${index && role != 'SUPERADMIN'}"
             th:action="@{/photos/refresh/{id} (id=*{id})}"
             method="POST"
           >
@@ -94,7 +117,16 @@
           </form>
 
           <form
+          	sec:authorize="hasAuthority('ADMIN')"
             th:unless="${index}"
+            th:action="@{/photos/delete/{id} (id=*{id})}"
+            method="POST"
+          >
+            <button type="submit">Delete</button>
+          </form>
+          <form
+          	sec:authorize="hasAuthority('SUPERADMIN')"
+            th:unless="${index && role != 'SUPERADMIN'}"
             th:action="@{/photos/delete/{id} (id=*{id})}"
             method="POST"
           >

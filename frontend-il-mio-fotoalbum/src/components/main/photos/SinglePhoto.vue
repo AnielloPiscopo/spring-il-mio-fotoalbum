@@ -1,4 +1,6 @@
 <script>
+import { store } from "../../../store";
+
 export default {
   name: "SinglePhoto",
 
@@ -6,18 +8,25 @@ export default {
     photo: {
       required: true,
     },
+  },
 
-    inputStr: {
-      required: false,
-    },
+  data() {
+    return {
+      store,
+    };
   },
 };
 </script>
 
 <template>
-  <div v-if="photo.title.includes(inputStr)">
+  <div :title="photo.title">
     <h1>{{ photo.title }}</h1>
-    <img :src="photo.imgUrl" alt="IMG" />
+    <img
+      v-if="photo.imgUrl"
+      :src="photo.imgUrl"
+      @error="photo.imgUrl = store.DEFAULT_IMG_URL"
+      :alt="photo.title"
+    />
     <div>{{ photo.description }}</div>
   </div>
 </template>

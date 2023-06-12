@@ -1,5 +1,6 @@
 package org.java.spring.services;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,12 @@ import org.springframework.stereotype.Service;
 public class PhotoServ {
 	@Autowired
 	private PhotoRepo repo;
+	
+	public List<Photo> orderById(List<Integer> photosIds){
+		List<Photo> photos = repo.findAllById(photosIds);
+		photos.sort(Comparator.comparingInt(Photo::getId));
+		return photos;
+	}
 	
 	/**
 	 * 

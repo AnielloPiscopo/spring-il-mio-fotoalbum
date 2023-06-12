@@ -3,6 +3,7 @@ package org.java.spring.controllers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.java.spring.auth.pojo.Role;
 import org.java.spring.auth.pojo.User;
@@ -57,9 +58,9 @@ public class PhotoController {
 		return role;
 	}
 	
-	private void photoAccessibilityCheck(Photo photo) throws Exception {
+	private void photoAccessibilityCheck(Photo photo , boolean show) throws Exception {
 		if(getLoggedUserRole().equals(SUPERADMIN)){
-			if((!photo.isVisible()) && (!photo.getUser().getRoles().contains(getSpecialRole()))) {
+			if(!(show) && (!photo.getUser().getRoles().contains(getSpecialRole()))) {
 				throw new IllegalAccessException();
 			}
 		}else if(!getLoggedUserRole().equals(SUPERADMIN)) {
@@ -69,13 +70,13 @@ public class PhotoController {
 		}
 	}
 	
-	private List<Photo> getAvailablePhotos(){
+	private List<Photo> getAvailablePhotos(boolean index){
 		List<Photo> photos = new ArrayList<>();
 		
 		if(getLoggedUserRole().equals(SUPERADMIN)) {
 			photos.addAll(serv.findAllVisiblePhotos());
 			photos.addAll(serv.findAllPhotosWithoutUsers());
-			photos.addAll(serv.findAllAvailablePhotos(getSpecialRole()));
+			photos.addAll((index) ? serv.findAllAvailablePhotos() : serv.findAllAvailablePhotos(getSpecialRole()));
 		}else {
 			photos.addAll(serv.findAllAvailablePhotos(getLoggedUser()));			
 		}
@@ -89,7 +90,7 @@ public class PhotoController {
 		if(getLoggedUserRole().equals(SUPERADMIN)) {
 			photos.addAll(serv.filterByTitleForVisiblePhotos(title));
 			photos.addAll(serv.filterByTitleForPhotosWithoutUsers(title));
-			photos.addAll(serv.filterByTitleForAvailablePhotos(getSpecialRole(), title));
+			photos.addAll(serv.filterByTitleForAvailablePhotos(title));
 		}else {
 			photos.addAll(serv.filterByTitleForAvailablePhotos(getLoggedUser(), title));
 		}
@@ -97,12 +98,12 @@ public class PhotoController {
 		return photos;
 	}
 	
-	private List<Photo> getTrashedPhotos(){
+	private List<Photo> getTrashedPhotos(boolean trash){
 		List<Photo> photos = new ArrayList<>();
 		
 		if(getLoggedUserRole() == SUPERADMIN) {
 			photos.addAll(serv.findAllTrashedPhotosWithoutUsers());
-			photos.addAll(serv.findAllTrashedPhotos(getSpecialRole()));
+			photos.addAll((trash) ? serv.findAllTrashedPhotos() : serv.findAllTrashedPhotos(getSpecialRole()));
 		}else {
 			photos.addAll(serv.findAllTrashedPhotos(getLoggedUser()));
 		}
@@ -115,12 +116,20 @@ public class PhotoController {
 		
 		if(getLoggedUserRole() == SUPERADMIN) {
 			photos.addAll(serv.filterByTitleForTrashedPhotosWithoutUsers(title));
-			photos.addAll(serv.filterByTitleForTrashedPhotos(getSpecialRole(), title));
+			photos.addAll(serv.filterByTitleForTrashedPhotos(title));
 		}else {
 			photos.addAll(serv.filterByTitleForTrashedPhotos(getLoggedUser(), title));
 		}
 		
 		return photos;
+	}
+	
+	private List<Photo> getOrderedPhotosList(List<Photo> photos){
+		List<Integer> pIds = photos.stream().map(Photo::getId).collect(Collectors.toList());
+		
+		List<Photo> orderedPhotos = serv.orderById(pIds);
+		
+		return orderedPhotos;
 	}
 	
 	/**
@@ -198,7 +207,8 @@ public class PhotoController {
 	 */
 	@GetMapping
 	public String index(Model model ) {
-		return getPhotoTableTemplate(getAvailablePhotos() , "Lista foto ", "view/admin/photo/index" , model);
+		List<Photo> photos = getOrderedPhotosList(getAvailablePhotos(true));
+		return getPhotoTableTemplate(photos , "Lista foto ", "view/admin/photo/index" , model);
 	}
 	
 	/*
@@ -207,7 +217,8 @@ public class PhotoController {
 	 */
 	@PostMapping
 	public String index(Model model , @RequestParam(name = "title") String title) {
-		return getPhotoTableTemplate(getAvailablePhotosFilteredByTitle(title) , "Lista foto" , "view/admin/photo/index" , model);
+		List<Photo> photos = getOrderedPhotosList(getAvailablePhotosFilteredByTitle(title));
+		return getPhotoTableTemplate(photos , "Lista foto" , "view/admin/photo/index" , model);
 	}
 	
 	/*
@@ -220,7 +231,7 @@ public class PhotoController {
 			Optional<Photo> optPhoto = serv.findById(id);
 			Photo photo = optPhoto.get();
 			
-			photoAccessibilityCheck(photo);
+			photoAccessibilityCheck(photo , true);
 			
 			pageTitle = "Photo " + photo.getTitle();
 			model.addAttribute("photo" , photo);
@@ -261,8 +272,7 @@ public class PhotoController {
 			Optional<Photo> optPhoto = serv.findById(id);
 			Photo photo = optPhoto.get();
 			
-			photoAccessibilityCheck(photo);
-			
+			photoAccessibilityCheck(photo , false);
 			
 			pageTitle = "Modifica la photo: " + photo.getTitle();
 			return getPhotoFormTemplate(photo , pageTitle , "Modifica elemento" , "view/admin/photo/edit" , model);
@@ -290,7 +300,8 @@ public class PhotoController {
 	 */
 	@GetMapping("/trash")
 	public String trash(Model model ) {
-		return getPhotoTableTemplate(getTrashedPhotos() , "Lista foto cestinate" , "view/admin/photo/trash" , model);
+		List<Photo> photos = getOrderedPhotosList(getTrashedPhotos(true));
+		return getPhotoTableTemplate(photos , "Lista foto cestinate" , "view/admin/photo/trash" , model);
 	}
 	
 	/*
@@ -299,7 +310,8 @@ public class PhotoController {
 	 */
 	@PostMapping("/trash")
 	public String trash(Model model , @RequestParam(name = "title") String title) {
-		return getPhotoTableTemplate(getTrashedPhotosFilteredByTitle(title) , "Lista foto cestinate" , "view/admin/photo/trash" , model);
+		List<Photo> photos = getOrderedPhotosList(getTrashedPhotosFilteredByTitle(title));
+		return getPhotoTableTemplate(photos , "Lista foto cestinate" , "view/admin/photo/trash" , model);
 	}
 	
 	/*
@@ -312,7 +324,7 @@ public class PhotoController {
 			Optional<Photo> optPhoto = serv.findById(id);
 			Photo photo = optPhoto.get();
 			
-			photoAccessibilityCheck(photo);
+			photoAccessibilityCheck(photo , false);
 			
 			changeTheTrashedValue(photo, true);
 			
@@ -331,7 +343,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/soft-delete-all")
 	public String softDeleteAll() {
-		List<Photo> photos = getAvailablePhotos();
+		List<Photo> photos = getOrderedPhotosList(getAvailablePhotos(false));
 		photos.stream().forEach(photo -> changeTheTrashedValue(photo, true));
 		return "redirect:/photos";
 	}
@@ -346,7 +358,7 @@ public class PhotoController {
 			Optional<Photo> optPhoto = serv.findById(id);
 			Photo photo = optPhoto.get();
 			
-			photoAccessibilityCheck(photo);
+			photoAccessibilityCheck(photo , false);
 			
 			changeTheTrashedValue(photo, false);
 			
@@ -365,7 +377,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/refresh-all")
 	public String refreshAll() {
-		List<Photo> photos = getTrashedPhotos();
+		List<Photo> photos = getOrderedPhotosList(getTrashedPhotos(false));
 		photos.stream().forEach(photo -> changeTheTrashedValue(photo, false));
 		return "redirect:/photos/trash";
 	}
@@ -380,7 +392,7 @@ public class PhotoController {
 			Optional<Photo> optPhoto = serv.findById(id);
 			Photo photo = optPhoto.get();
 			
-			photoAccessibilityCheck(photo);
+			photoAccessibilityCheck(photo , false);
 			
 			serv.delete(photo);
 			
@@ -399,7 +411,7 @@ public class PhotoController {
 	 */
 	@PostMapping("/delete-all")
 	public String deleteAll() {
-		List<Photo> photos = getTrashedPhotos();
+		List<Photo> photos = getOrderedPhotosList(getTrashedPhotos(false));
 		serv.deleteAll(photos);
 		return "redirect:/photos/trash";
 	}
