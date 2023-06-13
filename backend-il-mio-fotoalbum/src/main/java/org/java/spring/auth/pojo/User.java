@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +24,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class User implements UserDetails {
@@ -39,15 +41,20 @@ public class User implements UserDetails {
 	@OneToMany(mappedBy = "user" , cascade = CascadeType.REMOVE)
 	private List<Photo> photos;
 	
-	@NotNull
-	@NotBlank
+	@NotNull(message = "Devi inserire il tuo nome utente")
+	@NotBlank(message = "Devi inserire il tuo nome utente")
+	@Size(max = 100 , message = "Puoi inserire fino a 100 caratteri per il tuo nome utente")
+	@Column(nullable = false , length = 100)
 	private String username;
 	
-	@NotNull
-	@NotBlank
+	@NotNull(message = "Devi inserire una password")
+	@NotBlank(message = "Devi inserire una password")
+	@Size(max = 100 , message = "Puoi inserire fino a 100 caratteri per la password")
+	@Column(nullable = false , length = 100)
 	private String password;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
+	@NotNull(message = "L'utente deve avere almeno un ruolo")
 	private Set<Role> roles;
 	
 	public User() { }

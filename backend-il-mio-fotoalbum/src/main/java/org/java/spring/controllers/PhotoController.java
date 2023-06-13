@@ -36,40 +36,73 @@ public class PhotoController {
 	private final static String SUPERADMIN="SUPERADMIN";
 	private static String pageTitle;
 	
+	/**
+	 * 
+	 * Return  the current logged User name
+	 * @return userName
+	 */
 	private String getLoggedUserName() {
 		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 		return userName;
 	}
 	
+	/**
+	 * 
+	 * Return  the current logged User
+	 * @return user
+	 */
 	private User getLoggedUser() {
 		Optional<User> userOpt = userServ.findByUsername(getLoggedUserName());
 		User user = userOpt.get();
 		return user;
 	}
 	
+	/**
+	 * 
+	 * Return  the current logged User role
+	 * @return userRole
+	 */
 	private String getLoggedUserRole() {
 		String userRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().findFirst().map(GrantedAuthority::getAuthority).orElse("");
 		return userRole;
 	}
 	
+	/**
+	 * 
+	 * Return  the special role of the website that is in this case SUPERADMIN
+	 * @return role
+	 */
 	private Role getSpecialRole(){
 		Optional<Role> roleOpt = roleServ.findByName(SUPERADMIN);
 		Role role = roleOpt.get();
 		return role;
 	}
 	
+	/**
+	 * 
+	 * Make a check of a single photo by controlling the user:
+	 * 1) if user = ADMIN ---> avoid that one admin could see another user's photo through the id and public photo with Visible 	*	boolean value set to true;
+	 * 2) if user = SUPERADMIN ---> avoid the modification of photos of an ADMIN with the exception of the change of the visibility * *	of the photo;
+	 */
 	private void photoAccessibilityCheck(Photo photo , boolean forAllUsers) throws Exception {
 		if(getLoggedUserRole().equals(SUPERADMIN)){
 			if(!(forAllUsers) && (!(photo.getUserRole() == null) && !photo.getUserRole().equals(SUPERADMIN))) {
 				throw new IllegalAccessException();
 			}
 		}else if(!getLoggedUserRole().equals(SUPERADMIN)) {
-			if(photo.getUser().getId()!=getLoggedUser().getId() || photo.isVisible()) {
+			if(photo.getUser().getId()!=getLoggedUser().getId() || (photo.isVisible() && photo.getUser() == null)) {
 				throw new IllegalAccessException();
 			}
 		}
 	}
 	
+	/**
+	 * 
+	 * Return  the available photos according to the user:
+	 * 1)ADMIN --> own photos;
+	 * 2)SUPERADMIN --> all photos without users , all photos of all SUPERADMINS , all visible photos for the public;
+	 * @return photos
+	 */
 	private List<Photo> getAvailablePhotos(boolean index){
 		List<Photo> photos = new ArrayList<>();
 		
@@ -84,6 +117,13 @@ public class PhotoController {
 		return photos;
 	}
 	
+	/**
+	 * 
+	 * Return  the available photos filtered by title according to the user:
+	 * 1)ADMIN --> own photos;
+	 * 2)SUPERADMIN --> all photos without users , all photos of all SUPERADMINS , all visible photos for the public;
+	 * @return photos
+	 */
 	private List<Photo> getAvailablePhotosFilteredByTitle(String title){
 		List<Photo> photos = new ArrayList<>();
 		
@@ -98,6 +138,13 @@ public class PhotoController {
 		return photos;
 	}
 	
+	/**
+	 * 
+	 * Return  the trashed photos according to the user:
+	 * 1)ADMIN --> own photos;
+	 * 2)SUPERADMIN --> all photos without users , all photos of all SUPERADMINS , all visible photos for the public;
+	 * @return photos
+	 */
 	private List<Photo> getTrashedPhotos(boolean trash){
 		List<Photo> photos = new ArrayList<>();
 		
@@ -111,6 +158,13 @@ public class PhotoController {
 		return photos;
 	}
 	
+	/**
+	 * 
+	 * Return  the trashed photos filteredByTitle according to the user:
+	 * 1)ADMIN --> own photos;
+	 * 2)SUPERADMIN --> all photos without users , all photos of all SUPERADMINS , all visible photos for the public;
+	 * @return photos
+	 */
 	private List<Photo> getTrashedPhotosFilteredByTitle(String title){
 		List<Photo> photos = new ArrayList<>();
 		
@@ -124,6 +178,11 @@ public class PhotoController {
 		return photos;
 	}
 	
+	/**
+	 * 
+	 * Return ordered photos of a list
+	 * @return orderedPhotos
+	 */
 	private List<Photo> getOrderedPhotosList(List<Photo> photos){
 		List<Integer> pIds = photos.stream().map(Photo::getId).collect(Collectors.toList());
 		
@@ -417,6 +476,10 @@ public class PhotoController {
 		return "redirect:/photos/trash";
 	}
 	
+	/*
+	 * 
+	 * A Method that manages the changing of the boolean visibility of a Photo element
+	 */
 	@PostMapping("/change-visibility/{id}")
 	public String changeVisibility(@PathVariable("id") int id) {
 		try {

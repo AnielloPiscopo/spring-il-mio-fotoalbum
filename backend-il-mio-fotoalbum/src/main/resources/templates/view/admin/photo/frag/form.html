@@ -10,6 +10,9 @@
       name="title"
       th:value="*{title}"
       placeholder="Inserisci titolo"
+      minlength="3"
+      maxlength="100"
+      required
     />
     <span th:if="${errors != null && errors.hasFieldErrors('title')}"
       >[[${errors.getFieldError('title').defaultMessage}]]</span
@@ -22,6 +25,8 @@
       cols="30"
       rows="10"
       placeholder="Inserisci descrizione"
+      minlength="10"
+      maxlength="255"
     >
 [[*{description}]]</textarea
     >
@@ -31,10 +36,11 @@
   </div>
   <div class="my_form-el">
     <input
-      type="text"
+      type="url"
       name="imgUrl"
       th:value="*{imgUrl}"
       placeholder="Inserisci l'url dell'immagine"
+      required
     />
     <span th:if="${errors != null && errors.hasFieldErrors('imgUrl')}"
       >[[${errors.getFieldError('imgUrl').defaultMessage}]]</span

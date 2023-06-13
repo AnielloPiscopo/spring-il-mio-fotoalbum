@@ -8,4 +8,13 @@ export const store = reactive({
   verifyImgPresence(imgPath) {
     return imgPath ? imgPath : this.DEFAULT_IMG_URL;
   },
+
+  isValidEmail(email) {
+    const emailPattern = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+    return emailPattern.test(email);
+  },
+
+  hasTotCharacters(strLng, minLng, maxLng) {
+    return strLng >= minLng && strLng <= maxLng ? true : false;
+  },
 });

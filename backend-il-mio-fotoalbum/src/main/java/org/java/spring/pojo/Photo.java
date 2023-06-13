@@ -3,10 +3,12 @@ package org.java.spring.pojo;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.validator.constraints.URL;
 import org.java.spring.auth.pojo.User;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,6 +16,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Photo {
@@ -28,10 +33,19 @@ public class Photo {
 	@ManyToMany
 	private List<Category> categories;
 
+	@NotBlank(message = "Devi inserire il titolo per la tua foto")
+	@NotNull(message = "Devi inserire il titolo per la tua foto")
+	@Size(min = 3 , max = 100 , message = "Il titolo della tua foto non ha almento 3 caratteri oppure nei hai inserito più di 100")
+	@Column(unique = true , nullable = false , length = 100)
 	private String title;
 	
+	@Size(min = 10 , max = 255 , message = "Il contenuto del messaggio deve contenere almeno 10 caratteri per poter essere spedito")
+	@Column(nullable = true , length = 255)
 	private String description;
 	
+	@NotBlank(message = "Devi inserire la tua foto")
+	@NotNull(message = "Devi inserire la tua foto")
+	@URL(message = "Non hai inserito un URL valido")
 	private String imgUrl;
 		
 	private boolean visible;

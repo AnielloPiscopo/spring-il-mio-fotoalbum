@@ -29,7 +29,9 @@ public class AuthConfig {
 						.requestMatchers("/api/**").permitAll()
 						.requestMatchers("/**").hasAnyAuthority("ADMIN" , "SUPERADMIN")
 				)
-				.formLogin(f->f.permitAll())
+				.formLogin(f->f
+						.defaultSuccessUrl("/photos")
+						.permitAll())
 				.logout(l->l.logoutSuccessUrl("/photos"))
 				.build();
 	}

@@ -23,13 +23,13 @@ public interface PhotoRepo extends JpaRepository<Photo, Integer>{
 	
 	public List<Photo> findByTitleContainingAndVisibleFalseAndTrashedTrue(String title);
 	
-	public List<Photo> findByUserAndVisibleFalseAndTrashedFalse(User user);
+	public List<Photo> findByUserAndTrashedFalse(User user);
 
-	public List<Photo> findByUserAndVisibleFalseAndTrashedTrue(User user);
+	public List<Photo> findByUserAndTrashedTrue(User user);
 	
-	public List<Photo> findByUserAndTitleContainingAndVisibleFalseAndTrashedFalse(User user , String title);
+	public List<Photo> findByUserAndTitleContainingAndTrashedFalse(User user , String title);
 	
-	public List<Photo> findByUserAndTitleContainingAndVisibleFalseAndTrashedTrue(User user , String title);
+	public List<Photo> findByUserAndTitleContainingAndTrashedTrue(User user , String title);
 	
 	@Query(
 		    "SELECT p " +

@@ -42,7 +42,7 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return a list of private Photo elements with the boolean "deleted" set to false by filtering according to the string given in input
+	 * Return a list of private Photo elements with the boolean "trashed" set to false by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForVisiblePhotos(String title) {
@@ -51,7 +51,7 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return all private Photo elements in the database with the boolean "deleted" set to false
+	 * Return all private Photo elements in the database with the boolean "trashed" set to false
 	 * @return photos
 	 */
 	public List<Photo> findAllAvailablePhotos() {
@@ -60,7 +60,7 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return all private Photo elements in the database with the boolean "deleted" set to true
+	 * Return all private Photo elements in the database with the boolean "trashed" set to true
 	 * @return photos
 	 */
 	public List<Photo> findAllTrashedPhotos() {
@@ -69,7 +69,7 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return a list of private Photo elements with the boolean "deleted" set to false by filtering according to the string given in input
+	 * Return a list of private Photo elements with the boolean "trashed" set to false by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForAvailablePhotos(String title) {
@@ -78,7 +78,7 @@ public class PhotoServ {
 	
 	/**
 	 * 
-	 * Return a list of private Photo elements with the boolean "deleted" set to true by filtering according to the string given in input
+	 * Return a list of private Photo elements with the boolean "trashed" set to true by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForTrashedPhotos(String title) {
@@ -94,74 +94,127 @@ public class PhotoServ {
 		return repo.findById(id);
 	}
 	
+	/**
+	 * 
+	 * Return a list of Photo elements without a User with the boolean trashed set to false
+	 * @return photos
+	 */
 	public List<Photo> findAllPhotosWithoutUsers(){
-		return repo.findByUserAndVisibleFalseAndTrashedFalse(null);
-	}
-	
-	public List<Photo> findAllTrashedPhotosWithoutUsers(){
-		return repo.findByUserAndVisibleFalseAndTrashedTrue(null);
+		return repo.findByUserAndTrashedFalse(null);
 	}
 	
 	/**
 	 * 
-	 * Return all private Photo elements in the database with the boolean "deleted" set to false
+	 * Return a list of Photo elements without a User with the boolean "trashed" set to true
+	 * @return photos
+	 */
+	public List<Photo> findAllTrashedPhotosWithoutUsers(){
+		return repo.findByUserAndTrashedTrue(null);
+	}
+	
+	/**
+	 * 
+	 * Return all Photo elements with a User in the database with the boolean "trashed" set to false
 	 * @return photos
 	 */
 	public List<Photo> findAllAvailablePhotos(User user) {
-		return repo.findByUserAndVisibleFalseAndTrashedFalse(user);
+		return repo.findByUserAndTrashedFalse(user);
 	}
 	
 	/**
 	 * 
-	 * Return all private Photo elements in the database with the boolean "deleted" set to true
+	 * Return all Photo elements  with a User in the database with the boolean "trashed" set to true
 	 * @return photos
 	 */
 	public List<Photo> findAllTrashedPhotos(User user) {
-		return repo.findByUserAndVisibleFalseAndTrashedTrue(user);
-	}
-	
-	public List<Photo> filterByTitleForPhotosWithoutUsers(String title){
-		return repo.findByUserAndTitleContainingAndVisibleFalseAndTrashedFalse(null, title);
-	}
-	
-	public List<Photo> filterByTitleForTrashedPhotosWithoutUsers(String title){
-		return repo.findByUserAndTitleContainingAndVisibleFalseAndTrashedTrue(null, title);
+		return repo.findByUserAndTrashedTrue(user);
 	}
 	
 	/**
 	 * 
-	 * Return a list of private Photo elements with the boolean "deleted" set to false by filtering according to the string given in input
+	 * Return a list of Photo elements without a User with the boolean "trashed" set to false by filtering according to the 
+	 * 	string given in input
+	 * @return photos
+	 */
+	public List<Photo> filterByTitleForPhotosWithoutUsers(String title){
+		return repo.findByUserAndTitleContainingAndTrashedFalse(null, title);
+	}
+	
+	/**
+	 * 
+	 * Return a list of Photo elements without a User with the boolean "trashed" set to true by filtering according to the 
+	 * 	string given in input
+	 * @return photos
+	 */
+	public List<Photo> filterByTitleForTrashedPhotosWithoutUsers(String title){
+		return repo.findByUserAndTitleContainingAndTrashedTrue(null, title);
+	}
+	
+	/**
+	 * 
+	 * Return a list of Photo elements with a User with the boolean "trashed" 
+	 * set to false by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForAvailablePhotos(User user , String title) {
-		return repo.findByUserAndTitleContainingAndVisibleFalseAndTrashedFalse(user,title);
+		return repo.findByUserAndTitleContainingAndTrashedFalse(user,title);
 	}
 	
 	/**
 	 * 
-	 * Return a list of private Photo elements with the boolean "deleted" set to true by filtering according to the string given in input
+	 * Return a list of Photo elements with a User with the boolean "trashed"
+	 *  set to true by filtering according to the string given in input
 	 * @return photos
 	 */
 	public List<Photo> filterByTitleForTrashedPhotos(User user , String title) {
-		return repo.findByUserAndTitleContainingAndVisibleFalseAndTrashedTrue(user , title);
+		return repo.findByUserAndTitleContainingAndTrashedTrue(user , title);
 	}
 	
+	/**
+	 * 
+	 * Return all Photo elements by a Role
+	 * @return photos
+	 */
 	public List<Photo> findByRole(Role role){
 		return repo.findByRole(role);
 	}
 	
+	/**
+	 * 
+	 * Return all Photo elements by a Role in the database with the boolean "trashed" set to false
+	 * @return photos
+	 */
 	public List<Photo> findAllAvailablePhotos(Role role){
 		return repo.findByRoleAndVisibleFalseAndTrashedFalse(role);
 	}
 	
+	/**
+	 * 
+	 * Return all Photo elements by a Role in the database with the boolean "trashed" set to true
+	 * @return photos
+	 */
 	public List<Photo> findAllTrashedPhotos(Role role) {
 		return repo.findByRoleAndVisibleFalseAndTrashedTrue(role);
 	}
 	
+	/**
+	 * 
+	 * Return all Photo elements by a Role in the database with the boolean "trashed" set to false 
+	 * by filtering according to the 
+	 * 	string given in input
+	 * @return photos
+	 */
 	public List<Photo> filterByTitleForAvailablePhotos(Role role , String title){
 		return repo.findByRoleAndTitleContainingAndVisibleFalseAndTrashedFalse(role, title);
 	}
 	
+	/**
+	 * 
+	 * Return all Photo elements by a Role in the database with the boolean "trashed" set to true 
+	 * by filtering according to the 
+	 * 	string given in input
+	 * @return photos
+	 */
 	public List<Photo> filterByTitleForTrashedPhotos(Role role , String title){
 		return repo.findByRoleAndTitleContainingAndVisibleFalseAndTrashedTrue(role, title);
 	}

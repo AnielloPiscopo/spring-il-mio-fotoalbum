@@ -3,7 +3,12 @@
     <h1>[[${title}]]</h1>
 
     <form method="POST" th:if="${index}" th:action="@{/categories/create}">
-      <input type="text" name="name" />
+      <div class="my_form-el">
+        <input type="text" name="name" minlength="3" maxlength="100" required />
+        <span th:if="${errors != null && errors.hasFieldErrors('name')}"
+          >[[${errors.getFieldError('name').defaultMessage}]]</span
+        >
+      </div>
       <button type="submit">Crea nuovo elemento</button>
     </form>
 
@@ -55,6 +60,27 @@
         </td>
         <td>
           <span>[[*{name}]]</span>
+          <form
+            th:if="${index}"
+            th:action="@{/categories/edit/{id} (id=*{id})}"
+            method="POST"
+            class="my_d-none"
+          >
+            <div class="my_form-el">
+              <input
+                type="text"
+                th:value="*{name}"
+                name="name"
+                minlength="3"
+                maxlength="100"
+                required
+              />
+              <span th:if="${errors != null && errors.hasFieldErrors('name')}"
+                >[[${errors.getFieldError('name').defaultMessage}]]</span
+              >
+            </div>
+            <button type="submit" data-view-todo-input-field>Edit</button>
+          </form>
         </td>
         <td>
           <form
