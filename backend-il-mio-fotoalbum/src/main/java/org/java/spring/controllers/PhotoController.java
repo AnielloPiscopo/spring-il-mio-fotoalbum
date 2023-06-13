@@ -58,9 +58,9 @@ public class PhotoController {
 		return role;
 	}
 	
-	private void photoAccessibilityCheck(Photo photo , boolean show) throws Exception {
+	private void photoAccessibilityCheck(Photo photo , boolean forAllUsers) throws Exception {
 		if(getLoggedUserRole().equals(SUPERADMIN)){
-			if(!(show) && (!photo.getUser().getRoles().contains(getSpecialRole()))) {
+			if(!(forAllUsers) && (!(photo.getUserRole() == null) && !photo.getUserRole().equals(SUPERADMIN))) {
 				throw new IllegalAccessException();
 			}
 		}else if(!getLoggedUserRole().equals(SUPERADMIN)) {
@@ -156,9 +156,10 @@ public class PhotoController {
 			return templateToEdit;
 		}
 		
-		if(getLoggedUserRole()!=SUPERADMIN) photo.setVisible(false);
+		photo.setVisible(false);
 		
 		photo.setUser(getLoggedUser());
+		photo.setUserRole(getLoggedUserRole());
 		
 		serv.save(photo);
 		return templateToRedirect;
@@ -414,5 +415,24 @@ public class PhotoController {
 		List<Photo> photos = getOrderedPhotosList(getTrashedPhotos(false));
 		serv.deleteAll(photos);
 		return "redirect:/photos/trash";
+	}
+	
+	@PostMapping("/change-visibility/{id}")
+	public String changeVisibility(@PathVariable("id") int id) {
+		try {
+			Optional<Photo> optPhoto = serv.findById(id);
+			Photo photo = optPhoto.get();
+			
+			photoAccessibilityCheck(photo , true);
+			
+			photo.setVisible(!photo.isVisible());
+			serv.save(photo);
+			
+			return "redirect:/photos";
+		} catch(IllegalAccessException e){
+			throw new ResponseStatusException(HttpStatus.LOCKED , "Access Locked");
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Photo with id " + id + " not found");
+		}
 	}
 }

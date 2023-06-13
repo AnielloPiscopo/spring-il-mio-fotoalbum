@@ -37,6 +37,8 @@ public class Photo {
 	private boolean visible;
 	
 	private boolean trashed = false;
+	
+	private String userRole;
 
 	public Photo() {}
 	
@@ -116,7 +118,15 @@ public class Photo {
 	public void setTrashed(boolean trashed) {
 		this.trashed = trashed;
 	}
-	
+
+	public String getUserRole() {
+		return userRole;
+	}
+
+	public void setUserRole(String userRole) {
+		this.userRole = userRole;
+	}
+
 	public void addCategory(Category category) {
 		categories.add(category);
 	}

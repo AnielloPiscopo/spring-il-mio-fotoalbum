@@ -19,6 +19,7 @@ export default {
       photosList: [],
       apiUrlSpecificSection: "/photos",
       inputStr: "",
+      isCarousel: false,
       activePhotosIndex: 0,
       autoPlay: null,
       intervalPresence: true,
@@ -112,18 +113,40 @@ export default {
       />
       <span>{{ photosNum }}</span>
 
+      <div class="my_radio-btns-container">
+        <input
+          type="radio"
+          name="layout"
+          :value="false"
+          id="list"
+          v-model="isCarousel"
+        />
+        <label for="list">Lista</label>
+
+        <input
+          type="radio"
+          name="layout"
+          :value="true"
+          id="carousel"
+          v-model="isCarousel"
+        />
+        <label for="carousel">Carosello</label>
+      </div>
+
       <PhotosList
         :photos="filteredPhotosList"
         :activeIndex="activePhotosIndex"
-        @go-forth="increaseIndex(photosList.length)"
+        :isCarousel="isCarousel"
+        @go-forth="increaseIndex(filteredPhotosList.length)"
       />
 
       <PhotosBtnContainer
-        @go-back="decreaseIndex(photosList.length)"
-        @go-forth="increaseIndex(photosList.length)"
+        v-if="isCarousel"
+        @go-back="decreaseIndex(filteredPhotosList.length)"
+        @go-forth="increaseIndex(filteredPhotosList.length)"
       />
 
-      <div class="container-fluid">
+      <div class="container-fluid" v-if="isCarousel">
         <input
           type="checkbox"
           id="interval-presence-checkbox"
